@@ -114,6 +114,12 @@ nnoremap <Tab> za
 " Shift+Tab to toggle all folds
 nnoremap <silent> <S-Tab> :call ToggleFold()<CR>
 
+" make word bold
+inoremap <C-b> <Esc>viwc**<C-r>"**
+nnoremap <C-b> viwc**<C-r>"**<Esc>
+" Make selection bold
+vnoremap <C-b> c**<C-r>"**<Esc>
+
 set foldexpr=MarkdownLevel()
 set foldmethod=expr
 set foldtext=MyFoldText()
