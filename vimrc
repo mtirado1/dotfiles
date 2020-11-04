@@ -5,7 +5,7 @@ execute pathogen#infect()
 syntax on
 filetype plugin indent on
 set t_Co=256
-set number numberwidth=3
+set cursorline number numberwidth=3
 set nocindent autoindent tabstop=4 shiftwidth=4
 set conceallevel=2
 set noshowmode
@@ -87,34 +87,32 @@ nnoremap <Leader>n :call Notes()<CR>
 let s:writingenabled=0
 let s:notesenabled=0
 
+" Soft wrap prose
 function Notes()
   if s:notesenabled
-    echo "Epsilon Notes mode disabled"
-	setlocal nowrap nospell
-    set virtualedit=all
-    silent! nunmap <buffer> <Up>
-    silent! nunmap <buffer> <Down>
-    silent! nunmap <buffer> <Home>
-    silent! nunmap <buffer> <End>
+    echo "Notes mode disabled"
+	setlocal wrap nospell nolinebreak
+    silent! nunmap <buffer> 0
+    silent! nunmap <buffer> $
+    silent! nunmap <buffer> j
+    silent! nunmap <buffer> k
     silent! iunmap <buffer> <Up>
+    silent! nunmap <buffer> <Down>
+    silent! nunmap <buffer> <Up>
     silent! iunmap <buffer> <Down>
-    silent! iunmap <buffer> <Home>
-    silent! iunmap <buffer> <End>
 	let s:notesenabled=0
   else
-    echo "Epsilon Notes mode enabled"
-    setlocal wrap linebreak nolist spell spelllang=en,es
-	"setlocal textwidth=80
-	set virtualedit=
+    echo "Notes mode enabled"
+    setlocal wrap linebreak spell spelllang=en,es
     setlocal display+=lastline
+	noremap  <buffer> <silent> 0 g0
+	noremap  <buffer> <silent> $ g$
+	noremap  <buffer> <silent> j gj
+	noremap  <buffer> <silent> k gk
     noremap  <buffer> <silent> <Up>   gk
     noremap  <buffer> <silent> <Down> gj
-    noremap  <buffer> <silent> <Home> g<Home>
-    noremap  <buffer> <silent> <End>  g<End>
     inoremap <buffer> <silent> <Up>   <C-o>gk
     inoremap <buffer> <silent> <Down> <C-o>gj
-    inoremap <buffer> <silent> <Home> <C-o>g<Home>
-    inoremap <buffer> <silent> <End>  <C-o>g<End>
 	inoremap !! ¡!<Esc>i
 	inoremap ?? ¿?<Esc>i
 	inoremap ?! ¡¿?!<Esc>hi
@@ -124,29 +122,24 @@ function Notes()
   endif
 endfunction
 
+" Hard wrap prose
 function Writing()
+	setlocal spell!
 	if s:writingenabled
 		echo "Writing mode disabled"
-		"Goyo!
-		"setlocal noshowmode
-		setlocal nospell
 		setlocal formatoptions-=a
-		setlocal autoindent number
 		setlocal textwidth=0
 		let s:writingenabled=0
 	else
 		echo "Writing mode enabled"
-		"setlocal showmode
-		setlocal formatoptions=ant
+		setlocal formatoptions+=ant
 		setlocal textwidth=80
 		setlocal wrapmargin=0
-		setlocal noautoindent "nonumber
-		setlocal spell spelllang=en,es
+		setlocal spelllang=en,es
 		inoremap !! ¡!<Esc>i
 		inoremap ?? ¿?<Esc>i
 		inoremap ?! ¡¿?!<Esc>hi
 		inoremap << «»<Esc>i
-		"Goyo
 		let s:writingenabled=1
 	endif
 endfunction
