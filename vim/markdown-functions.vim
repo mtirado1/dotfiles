@@ -3,7 +3,7 @@
 
 " Automatically continue blockquote on line break
 setlocal formatoptions+=r
-setlocal comments=b:>
+setlocal comments=b:>,b:@@
 if get(g:, "vim_markdown_auto_insert_bullets", 1)
     " Do not automatically insert bullets when auto-wrapping with text-width
     setlocal formatoptions-=c
@@ -11,12 +11,8 @@ if get(g:, "vim_markdown_auto_insert_bullets", 1)
     setlocal comments+=b:*,b:+,b:-,b:;
 endif
 
-" Open files/links
-nnoremap <C-l> ?[<CR>/(<CR> gf
 
-"
 " Depends on Tabularize.
-"
 function! s:TableFormat()
     let l:pos = getpos('.')
     normal! {
@@ -47,13 +43,14 @@ function! MyFoldText()
 	" Count words
 	for l in getline(v:foldstart + 1, v:foldend)
 		" Ignore headers and comments
-		if empty(matchstr(l, '^#\+')) && empty(matchstr(l, '^@@')) && empty(matchstr(l, '^---$'))
+		if empty(matchstr(l, '^#\+')) && empty(matchstr(l, '^@@ ')) && empty(matchstr(l, '^---$'))
 			let wc += len(split(l, ' '))
 		endif
 	endfor
 	let expansionString = repeat(".", w)
-    let header = getline(v:foldstart)
-	let txt = repeat("    ", len(matchstr(header, '^#\+')) - 1) . header . " (" . wc . " words)" . expansionString 
+	let level = len(matchstr(getline(v:foldstart), '^#\+')) - 1
+    let header = repeat('│ ', level) . substitute(getline(v:foldstart), '^#\+', "•", "")
+	let txt = header . repeat(' ', 45 - strwidth(header)) . "(" . wc . " words)" . expansionString 
     return txt
 endfunction
 
@@ -82,15 +79,14 @@ function! DemoteElement()
 	endif
 endfunction
 
-let s:allfold=0
+let b:allfold = 0
 function! ToggleFold()
-	if s:allfold
+	if b:allfold
 		normal zR
-		let s:allfold=0
 	else
 		normal zM
-		let s:allfold=1
 	endif
+	let b:allfold = !b:allfold
 endfunction
 
 
@@ -108,19 +104,84 @@ nnoremap <silent> <C-l> :call DemoteElement()<CR>
 nnoremap <silent> <C-h> :call PromoteElement()<CR>
 " Format tables
 nnoremap <Leader>t :TableFormat<CR>
+" Jump to [placeholder]
+nnoremap <Leader><Space> <Esc>/\[*\]<CR>va[
+vnoremap <Leader><Space> <Esc>/\[*\]<CR>va[
 
+" make word bold
+inoremap <C-b> <Esc>viWc**<C-r>"**
+nnoremap <C-b> viWc**<C-r>"**<Esc>
+" Make selection bold
+vnoremap <C-b> c**<C-r>"**<Esc>
+
+" Fold
+set foldexpr=MarkdownLevel()
+set foldmethod=expr
+set foldtext=MyFoldText()
 " Tab to toggle header fold
 nnoremap <Tab> za
 " Shift+Tab to toggle all folds
 nnoremap <silent> <S-Tab> :call ToggleFold()<CR>
-
-" make word bold
-inoremap <C-b> <Esc>viwc**<C-r>"**
-nnoremap <C-b> viwc**<C-r>"**<Esc>
-" Make selection bold
-vnoremap <C-b> c**<C-r>"**<Esc>
-
-set foldexpr=MarkdownLevel()
-set foldmethod=expr
-set foldtext=MyFoldText()
 normal zR
+
+" General shortcurs for spanish prose
+inoremap !! ¡!<Esc>i
+inoremap ?? ¿?<Esc>i
+inoremap ?! ¡¿?!<Esc>hi
+inoremap << «»<Esc>i
+
+" Hard wrap prose
+let b:writingenabled=0
+nnoremap <F2> :call Writing()<CR>
+
+function Writing()
+	setlocal spell!
+	if b:writingenabled
+		echo "Writing mode disabled"
+		setlocal formatoptions-=ant
+		setlocal textwidth=0
+	else
+		echo "Writing mode enabled"
+		setlocal formatoptions+=ant
+		setlocal textwidth=80
+		setlocal wrapmargin=0
+		setlocal spelllang=en,es
+	endif
+	let b:writingenabled = !b:writingenabled
+endfunction
+
+
+" Soft wrap prose
+nnoremap <F4> :call Notes()<CR>
+let b:notesenabled=0
+
+function Notes()
+  if b:notesenabled
+    echo "Notes mode disabled"
+	setlocal wrap nospell nolinebreak
+    silent! nunmap <buffer> 0
+    silent! nunmap <buffer> $
+    silent! nunmap <buffer> j
+    silent! nunmap <buffer> k
+    silent! iunmap <buffer> <Up>
+    silent! nunmap <buffer> <Down>
+    silent! nunmap <buffer> <Up>
+    silent! iunmap <buffer> <Down>
+  else
+    echo "Notes mode enabled"
+    setlocal wrap linebreak spell spelllang=en,es
+    setlocal display+=lastline
+	noremap  <buffer> <silent> 0 g0
+	noremap  <buffer> <silent> $ g$
+	noremap  <buffer> <silent> j gj
+	noremap  <buffer> <silent> k gk
+    noremap  <buffer> <silent> <Up>   gk
+    noremap  <buffer> <silent> <Down> gj
+    inoremap <buffer> <silent> <Up>   <C-o>gk
+    inoremap <buffer> <silent> <Down> <C-o>gj
+
+  endif
+    let b:notesenabled = !b:notesenabled
+endfunction
+
+
