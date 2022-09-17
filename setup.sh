@@ -16,4 +16,4 @@ git clone https://github.com/srcery-colors/srcery-vim ~/.vim/bundle/srcery-vim
 cp vimrc ~/.vimrc
 cp vim/markdown-functions.vim ~/.vim/markdown-functions.vim
 cp tmux.conf ~/.tmux.conf
-
+cat bashrc >> ~/.bashrc
